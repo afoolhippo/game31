@@ -77,6 +77,7 @@ const state = {
   cpuHand: [],
   playerCard: null,
   cpuCard: null,
+  lastResult: null,
   locked: false,
   gameOver: false,
   turnCount: 0
@@ -97,6 +98,25 @@ function setAppHeight() {
 }
 window.addEventListener('resize', setAppHeight);
 setAppHeight();
+
+function ensureBattleResultBox() {
+  if ($('battleResult')) return;
+
+  const battleArea = document.querySelector('.battle-area');
+  if (!battleArea) return;
+
+  const result = document.createElement('div');
+  result.id = 'battleResult';
+  result.className = 'battle-result';
+  result.innerHTML = `
+    <div class="battle-result-main"></div>
+    <div class="battle-result-sub"></div>
+  `;
+
+  battleArea.appendChild(result);
+}
+
+ensureBattleResultBox();
 
 function cloneCard(id) {
   return {
@@ -145,9 +165,12 @@ function startGame() {
   state.cpuHand = [];
   state.playerCard = null;
   state.cpuCard = null;
+  state.lastResult = null;
   state.locked = false;
   state.gameOver = false;
   state.turnCount = 0;
+
+  hideBattleResult();
 
   for (let i = 0; i < HAND_SIZE; i++) {
     drawCard('player');
@@ -227,8 +250,37 @@ function setMessage(text) {
   $('messageBox').textContent = text;
 }
 
+function showBattleResult(type, damage) {
+  const box = $('battleResult');
+  if (!box) return;
+
+  box.className = `battle-result show ${type}`;
+
+  const main = box.querySelector('.battle-result-main');
+  const sub = box.querySelector('.battle-result-sub');
+
+  if (type === 'win') {
+    main.textContent = '勝った！';
+    sub.textContent = `CPU -${damage}`;
+  } else if (type === 'lose') {
+    main.textContent = '負けた・・・';
+    sub.textContent = `YOU -${damage}`;
+  } else {
+    main.textContent = '引き分け';
+    sub.textContent = '0';
+  }
+}
+
+function hideBattleResult() {
+  const box = $('battleResult');
+  if (!box) return;
+  box.className = 'battle-result';
+}
+
 function playPlayerCard(handIndex) {
   if (state.locked || state.gameOver) return;
+
+  hideBattleResult();
 
   const playerCard = state.playerHand.splice(handIndex, 1)[0];
   const cpuIndex = chooseCpuCardIndex();
@@ -322,18 +374,21 @@ function resolveTurn(playerCard, cpuCard) {
 
   msg += `${playerCard.name} つよさ${playerCard.power}\n`;
   msg += `VS\n`;
-  msg += `${cpuCard.name} つよさ${cpuCard.power}\n`;
+  msg += `${cpuCard.name} つよさ${cpuCard.power}`;
 
   const diff = playerCard.power - cpuCard.power;
 
   if (diff > 0) {
     state.cpuLife -= diff;
-    msg += `YOUの勝ち！\nCPUに${diff}ダメージ！`;
+    state.lastResult = 'win';
+    showBattleResult('win', diff);
   } else if (diff < 0) {
     state.playerLife -= Math.abs(diff);
-    msg += `CPUの勝ち！\nYOUに${Math.abs(diff)}ダメージ！`;
+    state.lastResult = 'lose';
+    showBattleResult('lose', Math.abs(diff));
   } else {
-    msg += '引き分け！\nダメージなし！';
+    state.lastResult = 'draw';
+    showBattleResult('draw', 0);
   }
 
   setMessage(msg.trim());
@@ -341,7 +396,7 @@ function resolveTurn(playerCard, cpuCard) {
 
   if (checkGameEnd()) return;
 
-  setTimeout(nextTurn, 1050);
+  setTimeout(nextTurn, 1500);
 }
 
 function nextTurn() {
@@ -359,6 +414,7 @@ function nextTurn() {
   }
 
   state.locked = false;
+  hideBattleResult();
   setMessage('次のカードを選ぼう！');
   renderAll();
 }
@@ -410,9 +466,29 @@ function endGame(isWin) {
 }
 
 function shareResult() {
-  const title = $('resultTitle').textContent;
-  const comment = $('resultComment').textContent;
-  const text = `カバカードで「${title}」！\n${comment}\n#カバゲーセン\n${GAME_URL}`;
+  const isWin = $('resultTitle').textContent === 'カバマスター';
+  const life = Math.max(0, state.playerLife);
+
+  const text = isWin
+    ? `カバカードで勝った！🦛🏆
+
+残りライフ ${life}
+
+無料ブラウザゲーム「カバカード」
+${GAME_URL}
+
+#カバカード
+#カバゲーセン`
+    : `カバカードで負けた…🦛💦
+
+残りライフ ${life}
+
+無料ブラウザゲーム「カバカード」
+${GAME_URL}
+
+#カバカード
+#カバゲーセン`;
+
   const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
   window.open(url, '_blank');
 }
@@ -425,7 +501,11 @@ $('backTitleBtn').addEventListener('click', () => {
   showScreen('title');
 });
 
-$('retryBtn').addEventListener('click', startGame);
+$('retryBtn').addEventListener('click', () => {
+  stopBgm();
+  hideBattleResult();
+  showScreen('title');
+});
 
 $('homeBtn').addEventListener('click', () => {
   window.location.href = HOME_URL;
