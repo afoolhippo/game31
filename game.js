@@ -3,7 +3,7 @@
 const HOME_URL = 'https://afoolhippo.github.io/home/?skipTitle=1';
 const GAME_URL = 'https://afoolhippo.github.io/game31/';
 
-const MAX_LIFE = 20;
+const MAX_LIFE = 15;
 const HAND_SIZE = 5;
 
 const CARD_MASTER = {
@@ -11,7 +11,7 @@ const CARD_MASTER = {
     id: 'kaba',
     type: 'monster',
     name: 'カバ',
-    power: 8,
+    power: 7,
     image: 'card_kaba.png'
   },
   nasman: {
@@ -25,21 +25,28 @@ const CARD_MASTER = {
     id: 'tomatoman',
     type: 'monster',
     name: 'トマトマン',
-    power: 6,
+    power: 5,
     image: 'card_tomatoman.png'
   },
   haburashiman: {
     id: 'haburashiman',
     type: 'monster',
     name: '歯ブラシマン',
-    power: 7,
+    power: 6,
     image: 'card_haburashiman.png'
+  },
+  axolotl: {
+    id: 'axolotl',
+    type: 'monster',
+    name: 'ウーパールーパー',
+    power: 4,
+    image: 'card_axolotl.png'
   },
   kame: {
     id: 'kame',
     type: 'monster',
     name: 'カメ',
-    power: 7,
+    power: 8,
     image: 'card_kame.png'
   },
   kappa: {
@@ -48,32 +55,17 @@ const CARD_MASTER = {
     name: '河童',
     power: 10,
     image: 'card_kappa.png'
-  },
-  orangejuice: {
-    id: 'orangejuice',
-    type: 'heal',
-    name: 'オレンジジュース',
-    heal: 3,
-    image: 'card_orangejuice.png'
-  },
-  bombonigiri: {
-    id: 'bombonigiri',
-    type: 'bomb',
-    name: '爆弾おにぎり',
-    damage: 5,
-    image: 'card_bombonigiri.png'
   }
 };
 
 const DECK_LIST = [
   'kaba', 'kaba', 'kaba', 'kaba',
-  'nasman', 'nasman', 'nasman', 'nasman',
-  'tomatoman', 'tomatoman', 'tomatoman',
+  'nasman', 'nasman', 'nasman',
+  'tomatoman', 'tomatoman', 'tomatoman', 'tomatoman',
   'haburashiman', 'haburashiman', 'haburashiman',
+  'axolotl', 'axolotl', 'axolotl',
   'kame', 'kame',
-  'kappa',
-  'orangejuice', 'orangejuice',
-  'bombonigiri'
+  'kappa'
 ];
 
 const state = {
@@ -219,7 +211,7 @@ function cardSmallHtml(card) {
   return `
     <img src="${card.image}" alt="${card.name}" onerror="this.style.display='none'">
     <div class="card-name">${card.name}</div>
-    <div class="card-power">${cardText(card)}</div>
+    <div class="card-power">つよさ ${card.power}</div>
   `;
 }
 
@@ -227,15 +219,8 @@ function cardLargeHtml(card) {
   return `
     <img src="${card.image}" alt="${card.name}" onerror="this.style.display='none'">
     <div class="card-name">${card.name}</div>
-    <div class="card-power">${cardText(card)}</div>
+    <div class="card-power">つよさ ${card.power}</div>
   `;
-}
-
-function cardText(card) {
-  if (card.type === 'monster') return `つよさ ${card.power}`;
-  if (card.type === 'heal') return `ライフ +${card.heal}`;
-  if (card.type === 'bomb') return `${card.damage}ダメージ`;
-  return '';
 }
 
 function setMessage(text) {
@@ -264,103 +249,99 @@ function playPlayerCard(handIndex) {
   renderAll();
   setMessage(`${playerCard.name}を出した！\nCPUもカードを出した！`);
 
-  setTimeout(() => resolveTurn(playerCard, cpuCard), 700);
+  setTimeout(() => resolveTurn(playerCard, cpuCard), 650);
 }
 
 function chooseCpuCardIndex() {
   if (state.cpuHand.length === 0) return -1;
 
-  if (state.cpuLife <= 8) {
-    const healIndex = state.cpuHand.findIndex(card => card.type === 'heal');
-    if (healIndex !== -1 && Math.random() < 0.75) return healIndex;
+  const cpuStrong = getStrongestCard(state.cpuHand);
+  const cpuWeak = getWeakestCard(state.cpuHand);
+  const cpuMid = getMiddleCard(state.cpuHand);
+
+  if (state.cpuLife <= 5 && cpuStrong.index !== -1) {
+    return Math.random() < 0.8 ? cpuStrong.index : cpuMid.index;
   }
 
-  const bombIndex = state.cpuHand.findIndex(card => card.type === 'bomb');
-  if (bombIndex !== -1 && state.playerLife <= 7) return bombIndex;
+  if (state.playerLife <= 5 && cpuStrong.index !== -1) {
+    return Math.random() < 0.7 ? cpuStrong.index : cpuMid.index;
+  }
 
-  let bestIndex = 0;
-  let bestScore = -999;
+  if (state.turnCount <= 2 && cpuWeak.index !== -1) {
+    return Math.random() < 0.55 ? cpuWeak.index : cpuMid.index;
+  }
 
-  state.cpuHand.forEach((card, index) => {
-    let score = 0;
+  const r = Math.random();
 
-    if (card.type === 'monster') score = card.power;
-    if (card.type === 'bomb') score = 8;
-    if (card.type === 'heal') score = state.cpuLife <= 12 ? 7 : 2;
+  if (r < 0.35 && cpuWeak.index !== -1) return cpuWeak.index;
+  if (r < 0.75 && cpuMid.index !== -1) return cpuMid.index;
+  return cpuStrong.index;
+}
 
-    score += Math.random() * 2;
+function getStrongestCard(hand) {
+  let index = -1;
+  let power = -999;
 
-    if (score > bestScore) {
-      bestScore = score;
-      bestIndex = index;
+  hand.forEach((card, i) => {
+    if (card.power > power) {
+      power = card.power;
+      index = i;
     }
   });
 
-  return bestIndex;
+  return { index, power };
+}
+
+function getWeakestCard(hand) {
+  let index = -1;
+  let power = 999;
+
+  hand.forEach((card, i) => {
+    if (card.power < power) {
+      power = card.power;
+      index = i;
+    }
+  });
+
+  return { index, power };
+}
+
+function getMiddleCard(hand) {
+  if (hand.length === 0) return { index: -1, power: 0 };
+
+  const sorted = hand
+    .map((card, index) => ({ card, index }))
+    .sort((a, b) => a.card.power - b.card.power);
+
+  const mid = sorted[Math.floor(sorted.length / 2)];
+  return { index: mid.index, power: mid.card.power };
 }
 
 function resolveTurn(playerCard, cpuCard) {
   let msg = '';
 
-  const playerEffect = applyInstantCard('player', playerCard);
-  const cpuEffect = applyInstantCard('cpu', cpuCard);
+  msg += `${playerCard.name} つよさ${playerCard.power}\n`;
+  msg += `VS\n`;
+  msg += `${cpuCard.name} つよさ${cpuCard.power}\n`;
 
-  if (playerEffect) msg += playerEffect + '\n';
-  if (cpuEffect) msg += cpuEffect + '\n';
+  const diff = playerCard.power - cpuCard.power;
 
-  if (playerCard.type === 'monster' && cpuCard.type === 'monster') {
-    const diff = playerCard.power - cpuCard.power;
-
-    msg += `${playerCard.name} つよさ${playerCard.power}\n`;
-    msg += `VS\n`;
-    msg += `${cpuCard.name} つよさ${cpuCard.power}\n`;
-
-    if (diff > 0) {
-      state.cpuLife -= diff;
-      msg += `YOUの勝ち！\nCPUに${diff}ダメージ！`;
-    } else if (diff < 0) {
-      state.playerLife -= Math.abs(diff);
-      msg += `CPUの勝ち！\nYOUに${Math.abs(diff)}ダメージ！`;
-    } else {
-      msg += '引き分け！\nダメージなし！';
-    }
+  if (diff > 0) {
+    state.cpuLife -= diff;
+    msg += `YOUの勝ち！\nCPUに${diff}ダメージ！`;
+  } else if (diff < 0) {
+    state.playerLife -= Math.abs(diff);
+    msg += `CPUの勝ち！\nYOUに${Math.abs(diff)}ダメージ！`;
   } else {
-    msg += 'カード効果だけが発動した！';
+    msg += '引き分け！\nダメージなし！';
   }
-
-  state.playerLife = Math.min(MAX_LIFE, state.playerLife);
-  state.cpuLife = Math.min(MAX_LIFE, state.cpuLife);
 
   setMessage(msg.trim());
   renderAll();
 
   if (checkGameEnd()) return;
 
-  setTimeout(nextTurn, 1200);
-}
-
-function applyInstantCard(owner, card) {
-  if (card.type === 'heal') {
-    if (owner === 'player') {
-      state.playerLife = Math.min(MAX_LIFE, state.playerLife + card.heal);
-      return `${card.name}！\nYOUのライフが${card.heal}回復！`;
-    } else {
-      state.cpuLife = Math.min(MAX_LIFE, state.cpuLife + card.heal);
-      return `CPUは${card.name}！\nCPUのライフが${card.heal}回復！`;
-    }
-  }
-
-  if (card.type === 'bomb') {
-    if (owner === 'player') {
-      state.cpuLife -= card.damage;
-      return `${card.name}！\nCPUに${card.damage}ダメージ！`;
-    } else {
-      state.playerLife -= card.damage;
-      return `CPUは${card.name}！\nYOUに${card.damage}ダメージ！`;
-    }
-  }
-
-  return '';
+  setTimeout(nextTurn, 1050);
 }
 
 function nextTurn() {
