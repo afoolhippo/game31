@@ -373,7 +373,6 @@ function resolveTurn(playerCard, cpuCard) {
   let msg = '';
 
   msg += `${playerCard.name} つよさ${playerCard.power}\n`;
-  msg += `VS\n`;
   msg += `${cpuCard.name} つよさ${cpuCard.power}`;
 
   const diff = playerCard.power - cpuCard.power;

@@ -179,55 +179,44 @@ body {
 
 .battle-result {
   position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  min-width: 96px;
-  padding: 8px 6px;
-  border: 3px solid #203047;
-  background: #fff;
-  box-shadow: 3px 3px 0 #203047;
+  left: 64%;
+  bottom: 28px;
+  transform: translateY(10px);
+  opacity: 0;
+  pointer-events: none;
   text-align: center;
-  display: none;
-  z-index: 3;
+  font-weight: bold;
+  z-index: 4;
+  transition: opacity 0.25s ease, transform 0.25s ease;
 }
 
 .battle-result.show {
-  display: block;
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .battle-result-main {
   font-size: 24px;
   line-height: 1.1;
+  text-shadow: 2px 2px 0 #fff;
 }
 
 .battle-result-sub {
   font-size: 14px;
   margin-top: 4px;
   line-height: 1.2;
+  text-shadow: 2px 2px 0 #fff;
 }
 
 .battle-result.win {
-  background: #fff475;
-}
-
-.battle-result.win .battle-result-main {
   color: #e83b3b;
 }
 
 .battle-result.lose {
-  background: #d9f2ff;
-}
-
-.battle-result.lose .battle-result-main {
   color: #1f78d1;
 }
 
 .battle-result.draw {
-  background: #d7ff7a;
-}
-
-.battle-result.draw .battle-result-main {
   color: #238b45;
 }
 
