@@ -448,6 +448,7 @@ function finishByLife() {
 function endGame(isWin) {
   state.gameOver = true;
   state.locked = true;
+  stopBgm();
 
   if (isWin) {
     $('resultImage').src = 'result_win.png';

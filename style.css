@@ -188,6 +188,8 @@ body {
   font-weight: bold;
   z-index: 4;
   transition: opacity 0.25s ease, transform 0.25s ease;
+  min-width: 120px;
+  white-space: nowrap;
 }
 
 .battle-result.show {
