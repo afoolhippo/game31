@@ -39,7 +39,7 @@ const CARD_MASTER = {
     id: 'kame',
     type: 'monster',
     name: 'カメ',
-    power: 5,
+    power: 7,
     image: 'card_kame.png'
   },
   kappa: {
@@ -247,6 +247,13 @@ function playPlayerCard(handIndex) {
 
   const playerCard = state.playerHand.splice(handIndex, 1)[0];
   const cpuIndex = chooseCpuCardIndex();
+
+  if (cpuIndex < 0) {
+    state.playerHand.splice(handIndex, 0, playerCard);
+    finishByLife();
+    return;
+  }
+
   const cpuCard = state.cpuHand.splice(cpuIndex, 1)[0];
 
   state.playerCard = playerCard;
@@ -317,14 +324,8 @@ function resolveTurn(playerCard, cpuCard) {
     } else {
       msg += '引き分け！\nダメージなし！';
     }
-  } else if (playerCard.type === 'monster' && cpuCard.type !== 'monster') {
-    state.cpuLife -= playerCard.power;
-    msg += `${playerCard.name}の攻撃！\nCPUに${playerCard.power}ダメージ！`;
-  } else if (playerCard.type !== 'monster' && cpuCard.type === 'monster') {
-    state.playerLife -= cpuCard.power;
-    msg += `${cpuCard.name}の攻撃！\nYOUに${cpuCard.power}ダメージ！`;
   } else {
-    msg += '特殊カード同士！';
+    msg += 'カード効果だけが発動した！';
   }
 
   state.playerLife = Math.min(MAX_LIFE, state.playerLife);
