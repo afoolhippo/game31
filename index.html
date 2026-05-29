@@ -16,8 +16,8 @@
       <div class="title-wrap">
         <img src="title.png" alt="カバカード" class="title-img" id="titleImage">
         <p class="rule">
-          カードを召喚してCPUとデュエル！<br>
-          攻撃表示・守備表示を選び、LPを0にしよう。
+          手札から1枚出してCPUと勝負！<br>
+          つよさの差だけライフにダメージ！
         </p>
         <button id="startBtn" class="main-btn">タップしてスタート</button>
       </div>
@@ -26,31 +26,36 @@
     <section id="gameScreen" class="screen">
       <button id="backTitleBtn" class="top-btn">タイトルへ戻る</button>
 
-      <div class="battle-header">
-        <div class="lp-box cpu-lp">CPU LP <span id="cpuLp">2000</span></div>
-        <div class="turn-box" id="turnText">あなたのターン</div>
-        <div class="lp-box player-lp">YOU LP <span id="playerLp">2000</span></div>
+      <div class="status-area">
+        <div class="status-box">
+          CPU ライフ <span id="cpuLife">20</span><br>
+          のこりカード <span id="cpuDeckCount">20</span>
+        </div>
+        <div class="status-box">
+          YOU ライフ <span id="playerLife">20</span><br>
+          のこりカード <span id="playerDeckCount">20</span>
+        </div>
       </div>
 
-      <div class="field-area">
-        <div class="side-label">CPU FIELD</div>
-        <div id="cpuField" class="field-row"></div>
-
-        <div id="messageBox" class="message-box">
-          カードを選んで召喚しよう！
+      <div class="battle-area">
+        <div class="battle-card-wrap">
+          <div class="label">CPU</div>
+          <div id="cpuBattleCard" class="battle-card back-card">?</div>
         </div>
 
-        <div id="playerField" class="field-row"></div>
-        <div class="side-label">YOU FIELD</div>
+        <div id="messageBox" class="message-box">
+          手札からカードを選ぼう！
+        </div>
+
+        <div class="battle-card-wrap">
+          <div class="label">YOU</div>
+          <div id="playerBattleCard" class="battle-card empty-card">未選択</div>
+        </div>
       </div>
 
       <div class="hand-area">
-        <div class="hand-title">HAND</div>
+        <div class="hand-title">手札</div>
         <div id="playerHand" class="hand-row"></div>
-      </div>
-
-      <div class="action-area">
-        <button id="endTurnBtn" class="sub-btn">ターン終了</button>
       </div>
     </section>
 
@@ -58,7 +63,7 @@
       <div class="result-wrap">
         <img id="resultImage" src="result_win.png" alt="結果" class="result-img">
         <h1 id="resultTitle">カバマスター</h1>
-        <p id="resultComment">デュエルを制した！</p>
+        <p id="resultComment">勝利をつかんだ！</p>
 
         <div class="result-buttons">
           <button id="shareBtn" class="main-btn">Xでシェア</button>
@@ -67,12 +72,6 @@
         </div>
       </div>
     </section>
-
-    <div id="modal" class="modal hidden">
-      <div class="modal-box">
-        <div id="modalContent"></div>
-      </div>
-    </div>
 
   </div>
 
