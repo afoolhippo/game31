@@ -171,6 +171,7 @@ function startGame() {
   state.turnCount = 0;
 
   hideBattleResult();
+  hideResultButtons();
 
   for (let i = 0; i < HAND_SIZE; i++) {
     drawCard('player');
@@ -275,6 +276,22 @@ function hideBattleResult() {
   const box = $('battleResult');
   if (!box) return;
   box.className = 'battle-result';
+}
+
+function hideResultButtons() {
+  const buttons = document.querySelector('.result-buttons');
+  if (buttons) buttons.classList.remove('show');
+}
+
+function showResultButtonsLater() {
+  const buttons = document.querySelector('.result-buttons');
+  if (!buttons) return;
+
+  buttons.classList.remove('show');
+
+  setTimeout(() => {
+    buttons.classList.add('show');
+  }, 1500);
 }
 
 function playPlayerCard(handIndex) {
@@ -449,6 +466,7 @@ function endGame(isWin) {
   state.gameOver = true;
   state.locked = true;
   stopBgm();
+  hideResultButtons();
 
   if (isWin) {
     $('resultImage').src = 'result_win.png';
@@ -462,17 +480,15 @@ function endGame(isWin) {
 
   setTimeout(() => {
     showScreen('result');
+    showResultButtonsLater();
   }, 900);
 }
 
 function shareResult() {
   const isWin = $('resultTitle').textContent === 'カバマスター';
-  const life = Math.max(0, state.playerLife);
 
   const text = isWin
     ? `カバカードで勝った！🦛🏆
-
-残りライフ ${life}
 
 無料ブラウザゲーム「カバカード」
 ${GAME_URL}
@@ -480,8 +496,6 @@ ${GAME_URL}
 #カバカード
 #カバゲーセン`
     : `カバカードで負けた…🦛💦
-
-残りライフ ${life}
 
 無料ブラウザゲーム「カバカード」
 ${GAME_URL}
@@ -504,6 +518,7 @@ $('backTitleBtn').addEventListener('click', () => {
 $('retryBtn').addEventListener('click', () => {
   stopBgm();
   hideBattleResult();
+  hideResultButtons();
   showScreen('title');
 });
 
